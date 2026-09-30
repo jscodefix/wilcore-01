@@ -47,35 +47,31 @@ The application follows the idiomatic Ruby on Rails MVC architecture with an add
 
 ### 2.1. Migration Design
 
-#### `db/migrate/20250924140936_create_people.rb`
-```ruby
-class CreatePeople < ActiveRecord::Migration[7.1]
-  def change
-    create_table :people do |t|
-      t.string :first_name, null: false
-      t.string :last_name, null: false
-      t.string :phone_number
-      t.boolean :active, default: true, null: false
-      t.json :permission_codes, default: []
+#### Initial Table Setup Migrations
+- `db/migrate/20250924140936_create_people.rb` (creates base `people` table with timestamps)
+- `db/migrate/20250924141004_create_organizations.rb` (creates base `organizations` table with timestamps)
 
-      t.timestamps
-    end
+#### `db/migrate/20260930100001_add_attributes_to_people.rb`
+```ruby
+class AddAttributesToPeople < ActiveRecord::Migration[7.1]
+  def change
+    add_column :people, :first_name, :text, null: false
+    add_column :people, :last_name, :text, null: false
+    add_column :people, :phone_number, :text
+    add_column :people, :active, :boolean, default: true, null: false
+    add_column :people, :permission_codes, :json, default: []
   end
 end
 ```
 
-#### `db/migrate/20250924141004_create_organizations.rb`
+#### `db/migrate/20260930100002_add_attributes_to_organizations.rb`
 ```ruby
-class CreateOrganizations < ActiveRecord::Migration[7.1]
+class AddAttributesToOrganizations < ActiveRecord::Migration[7.1]
   def change
-    create_table :organizations do |t|
-      t.string :name, null: false
-      t.string :code, null: false
-      t.text :address
-      t.string :phone_number
-
-      t.timestamps
-    end
+    add_column :organizations, :name, :text, null: false
+    add_column :organizations, :code, :text, null: false
+    add_column :organizations, :address, :text
+    add_column :organizations, :phone_number, :text
     add_index :organizations, :code
   end
 end

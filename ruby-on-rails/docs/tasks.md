@@ -7,17 +7,17 @@ This task matrix outlines the step-by-step implementation sequence. Each task re
 ## Task Matrix & Progression Breakdown
 
 ### Task 1: Database Migrations for `people` and `organizations`
-- **Objective:** Define strict column types, nullability constraints, and indices for `people` and `organizations` tables.
+- **Objective:** Add required attributes, nullability constraints, default values, and indices to existing `people` and `organizations` tables.
 - **Files Affected:**
-  - `db/migrate/20250924140936_create_people.rb`
-  - `db/migrate/20250924141004_create_organizations.rb`
+  - `db/migrate/20260930100001_add_attributes_to_people.rb`
+  - `db/migrate/20260930100002_add_attributes_to_organizations.rb`
 - **TDD / Verification Command:**
   ```bash
   docker compose exec web bin/rails db:migrate
   docker compose exec web bin/rails db:test:prepare
   ```
 - **Proposed Git Commit:**
-  `feat(db): create people and organizations tables with indexed codes`
+  `feat(db): add attributes and indices to people and organizations tables`
 
 ---
 

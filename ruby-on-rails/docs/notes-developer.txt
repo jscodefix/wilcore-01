@@ -1,0 +1,13 @@
+
+# commands
+$ docker compose up --build
+$ docker compose exec web bin/rails db:migrate
+$ docker compose run --rm web bundle exec rspec
+$ docker exec -it 6bc1970d8e7e /bin/bash
+$ docker ps
+$ docker compose ps
+$ docker compose config --volumes
+$ docker inspect --format='{{json .Mounts}}' ruby-on-rails-web-1 | jq
+
+
+irb(main):010> ActiveRecord::Base.connection.migration_context.get_all_versions # shows all migrations
