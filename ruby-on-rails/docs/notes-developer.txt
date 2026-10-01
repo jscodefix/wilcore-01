@@ -11,3 +11,15 @@ $ docker inspect --format='{{json .Mounts}}' ruby-on-rails-web-1 | jq
 
 
 irb(main):010> ActiveRecord::Base.connection.migration_context.get_all_versions # shows all migrations
+
+
+# 403 forbidden error, when running Rspec (in Docker)
+Solutions
+- Option 1: Pass RAILS_ENV=test to Docker Compose (Recommended) Run the test command with the RAILS_ENV=test environment flag:
+docker compose run -e RAILS_ENV=test --rm web bundle exec rspec spec/requests/people_controller_request_spec.rb
+- Option 2: Force Test Environment in spec/rails_helper.rb In spec/rails_helper.rb, change line 3 from conditional assignment (||=) to explicit assignment:
+ENV['RAILS_ENV'] = 'test'
+This guarantees that Rails always boots in the test environment during RSpec runs regardless of container defaults.
+- Option 3: Whitelist www.example.com in config/environments/development.rb / test.rb If you want to permit the test host across all environments,
+add www.example.com to config.hosts:
+config.hosts << "www.example.com"
