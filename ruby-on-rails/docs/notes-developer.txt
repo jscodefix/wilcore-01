@@ -23,3 +23,7 @@ This guarantees that Rails always boots in the test environment during RSpec run
 - Option 3: Whitelist www.example.com in config/environments/development.rb / test.rb If you want to permit the test host across all environments,
 add www.example.com to config.hosts:
 config.hosts << "www.example.com"
+
+
+# questions
+## is there a need for the Organization object (since only strings are used/compared)?

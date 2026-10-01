@@ -10,7 +10,12 @@ class PeopleController < ApplicationController
   end
 
   def check_access
-    render json: { success: 'true or false goes here' }
+    person = Person.find(params[:id])
+    org_id = params.dig(:organization, :id)
+    org = Organization.find_by(id: org_id) if org_id.present?
+
+    has_access = person.active? && org.present? && Array(person.permission_codes).map(&:to_s).include?(org.code.to_s)
+    render json: { access: has_access }, status: :ok
   end
 
   private

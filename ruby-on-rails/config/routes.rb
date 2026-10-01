@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -9,6 +11,6 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :people, only: :show do
-    post "check_access"
+    post "check_access", on: :member
   end
 end
