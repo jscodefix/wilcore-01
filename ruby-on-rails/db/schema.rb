@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_30_100002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_04_130001) do
   create_table "organizations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -29,6 +29,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_100002) do
     t.text "phone_number"
     t.boolean "active", default: true, null: false
     t.json "permission_codes", default: []
+    t.index ["last_name", "first_name"], name: "index_people_on_last_name_and_first_name", unique: true
   end
 
 end

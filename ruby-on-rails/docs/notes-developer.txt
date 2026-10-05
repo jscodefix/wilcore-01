@@ -27,3 +27,117 @@ config.hosts << "www.example.com"
 
 # questions
 ## is there a need for the Organization object (since only strings are used/compared)?
+
+
+# RSpec code coverage analysis
+
+**Recommended RSpec Test Examples & Edge Cases for Task 6**
+
+To achieve complete code coverage, guard against regressions, and handle defensive programming edge cases across the API endpoints, here is a breakdown of potential RSpec test examples to include in `spec/requests/people_controller_request_spec.rb` and supporting unit specs.
+
+---
+
+**1. `GET /people/:id` Endpoint Scenarios**
+
+**Standard & Contract Validation**
+- **`200 OK` with full profile data**: Validates response structure when `first_name`, `last_name`, and `phone_number` are all present.
+- **`200 OK` with optional/nil attributes**: Person with `phone_number: nil` still renders `200 OK` and serializes `"phone_number" => nil`.
+- **Strict attribute filtering**: Explicitly asserts that sensitive or internal database columns (`id`, `active`, `permission_codes`, `created_at`, `updated_at`) are excluded from the response payload.
+- **Lookup for inactive person**: Confirms `GET /people/:id` still succeeds with `200 OK` for a person where `active: false` (since deactivation governs access evaluation, not profile lookup).
+
+**Edge Cases & Error Handling**
+- **Non-existent numeric ID**: `GET /people/999999` returns `404 Not Found` with `{ "error": "Person not found" }`.
+- **Negative ID**: `GET /people/-1` returns `404 Not Found`.
+- **Non-numeric / String ID**: `GET /people/invalid-id` or `GET /people/abc` safely returns `404 Not Found` rather than unhandled 500 errors.
+- **Special characters in names**: Verifies correct UTF-8 rendering for names with accents, apostrophes, or unicode characters (e.g., `José`, `O'Connor`).
+
+---
+
+**2. `POST /people/:id/check_access` Endpoint Scenarios**
+
+**Core Authorization Logic Matrix**
+- **Active person + matching single permission code**: Returns `200 OK` with `{ "access": true }`.
+- **Active person + matching code in a multi-code array**: Person with `permission_codes: ["ORG1", "ORG2", "ORG3"]` evaluating against `ORG2` returns `{ "access": true }`.
+- **Active person + code mismatch**: Person with `permission_codes: ["ORG1"]` evaluating against `ORG2` returns `{ "access": false }`.
+- **Active person + empty permission array**: Person with `permission_codes: []` returns `{ "access": false }`.
+- **Active person + `nil` permission codes**: Person with `permission_codes: nil` is handled safely without raising a `NoMethodError` and returns `{ "access": false }`.
+- **Inactive person (`active: false`) + matching permission code**: Returns `200 OK` with `{ "access": false }`.
+- **Inactive person (`active: false`) + non-matching permission code**: Returns `200 OK` with `{ "access": false }`.
+
+**Type & Case Normalization**
+- **String vs Integer code normalization**: Validates that numeric codes stored as integers or strings match correctly (e.g., `permission_codes: [101]` matches `Organization#code` of `"101"` and vice versa).
+- **Case sensitivity verification**: Confirms whether permission codes are case-sensitive (e.g., `"org1"` vs `"ORG1"`).
+
+**Request Payload & Param Edge Cases**
+- **Missing person ID**: `POST /people/999999/check_access` returns `404 Not Found` with `{ "error": "Person not found" }`.
+- **Non-existent organization ID**: Payload referencing non-existent `organization: { id: 999999 }` returns `200 OK` with `{ "access": false }`.
+- **Missing `organization` root key**: Empty payload `{}` or `{ foo: 'bar' }` does not raise `NoMethodError` / `KeyError` and returns `200 OK` with `{ "access": false }`.
+- **Missing `id` in organization object**: Payload `{ organization: {} }` or `{ organization: { id: nil } }` returns `200 OK` with `{ "access": false }`.
+- **Invalid organization ID type**: Payload `{ organization: { id: 'invalid_id' } }` or `{ organization: { id: -1 } }` returns `200 OK` with `{ "access": false }`.
+- **Extra payload parameters**: Request including extraneous parameters (e.g., `{ organization: { id: org.id, name: "fake" }, extra: true }`) is safely processed without mass-assignment or parsing issues.
+
+---
+
+**3. Model & Serializer Unit Specs**
+
+**`Person` Model (`spec/models/person_spec.rb`)**
+- **Presence validations**: Rejects blank strings (`""`) and whitespace-only strings (`"   "`) for `first_name` and `last_name`.
+- **Default attributes**: Confirms newly initialized person records default `active` to `true` and `permission_codes` to `[]`.
+- **JSON serialization round-trip**: Confirms complex arrays and special strings inside `permission_codes` persist and load correctly as Ruby `Array` instances.
+
+**`Organization` Model (`spec/models/organization_spec.rb`)**
+- **Presence validations**: Rejects blank `name` or `code`.
+- **Optional fields**: Confirms records can be saved without `address` or `phone_number`.
+
+**`PersonSerializer` (`spec/serializers/person_serializer_spec.rb`)**
+- **Nil handling**: Verifies `nil` attributes are preserved as `nil` in the output hash.
+- **Whitelisting enforcement**: Verifies that adding new attributes to the `Person` model does not inadvertently leak them through `PersonSerializer`.
+
+---
+
+**Example RSpec Implementation Structure**
+
+```ruby
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe PeopleController, type: :request do
+  describe 'GET /people/:id' do
+    context 'when the person exists' do
+      it 'returns 200 OK with whitelisted attributes'
+      it 'handles null phone numbers gracefully'
+      it 'does not expose private metadata fields'
+    end
+
+    context 'when the person does not exist' do
+      it 'returns 404 Not Found for non-existent integer ID'
+      it 'returns 404 Not Found for non-numeric ID'
+    end
+  end
+
+  describe 'POST /people/:id/check_access' do
+    context 'when person does not exist' do
+      it 'returns 404 Not Found'
+    end
+
+    context 'when person is inactive' do
+      it 'returns { access: false } even when permission codes match'
+    end
+
+    context 'when person is active' do
+      it 'returns { access: true } when organization code matches'
+      it 'returns { access: true } when matching code is one of several'
+      it 'returns { access: false } when organization code does not match'
+      it 'returns { access: false } when permission_codes is empty or nil'
+      it 'normalizes integer and string permission code types'
+    end
+
+    context 'when request payload is malformed or missing organization' do
+      it 'returns { access: false } when organization ID is missing'
+      it 'returns { access: false } when organization does not exist'
+      it 'returns { access: false } when payload is empty'
+    end
+  end
+end
+```

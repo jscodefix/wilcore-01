@@ -20,6 +20,13 @@ RSpec.describe Person, type: :model do
       expect(person).not_to be_valid
       expect(person.errors[:last_name]).to be_present
     end
+
+    it 'is invalid with duplicate case-insensitive last_name and first_name' do
+      Person.create!(first_name: 'Hans', last_name: 'Solo')
+      duplicate = Person.new(first_name: 'hans', last_name: 'SOLO')
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:last_name]).to include("and first name already exists")
+    end
   end
 
   describe 'permission_codes serialization' do
