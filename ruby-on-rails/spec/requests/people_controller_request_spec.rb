@@ -3,6 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe PeopleController, type: :request do
+  before do
+    Organization.create!(name: 'Org 1', code: 'org1')
+  end
+
   describe 'GET /people/{:id}' do
     context 'person exists' do
       let!(:person) do

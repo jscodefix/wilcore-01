@@ -3,6 +3,10 @@
 require 'rails_helper'
 
 RSpec.describe Person, type: :model do
+  before do
+    Organization.create!(name: 'Org 1', code: 'org1')
+  end
+
   describe 'validations' do
     it 'is valid with valid attributes' do
       person = Person.new(first_name: 'Jimmy', last_name: 'Hoffa', phone_number: '303.555.DEAD', active: true, permission_codes: ['org1'])
@@ -27,10 +31,17 @@ RSpec.describe Person, type: :model do
       expect(duplicate).not_to be_valid
       expect(duplicate.errors[:last_name]).to include("and first name already exists")
     end
+
+    it 'is invalid if any permission code is not associated with an organization' do
+      person = Person.new(first_name: 'Jimmy', last_name: 'Hoffa', permission_codes: ['org1', 'org2'])
+      expect(person).not_to be_valid
+      expect(person.errors[:permission_codes]).to be_present
+    end
   end
 
   describe 'permission_codes serialization' do
     it 'serializes and deserializes permission_codes as an Array' do
+      Organization.create!(name: 'Org 2', code: 'org2')
       person = Person.create!(first_name: 'Jimmy', last_name: 'Hoffa', permission_codes: ['org1', 'org2'])
       reloaded_person = Person.find(person.id)
       expect(reloaded_person.permission_codes).to be_an(Array)

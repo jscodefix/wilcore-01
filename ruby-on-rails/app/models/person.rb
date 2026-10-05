@@ -5,6 +5,7 @@ class Person < ApplicationRecord
 
   validates :first_name, presence: true
   validates :last_name, presence: true, uniqueness: { scope: :first_name, message: 'and first name already exists' }
+  validates :permission_codes, inclusion: { in: ->(person) { Organization.pluck(:code) }, message: 'are not associated with an organization' }
 
   private
 
