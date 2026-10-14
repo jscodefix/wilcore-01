@@ -1,5 +1,6 @@
 
-# commands
+# command reference
+
 $ docker compose up --build
 $ docker compose exec web bin/rails db:migrate
 $ docker compose run --rm web bundle exec rspec
@@ -9,11 +10,22 @@ $ docker compose ps
 $ docker compose config --volumes
 $ docker inspect --format='{{json .Mounts}}' ruby-on-rails-web-1 | jq
 
-
 irb(main):010> ActiveRecord::Base.connection.migration_context.get_all_versions # shows all migrations
 
 
-# 403 forbidden error, when running Rspec (in Docker)
+# questions and comments
+- it seems there is a discrepancy with the specs (in README); the check_access endpoint should use an organization code and not an ID (so refactor)
+
+
+# refactors and enhancements
+- refactor the check_access endpoint to use an organization code and not an ID
+- add unique constraint to organization name and code
+- add OpenAPI documentation for the API endpoints
+
+
+# issues and circumstances
+
+## 403 forbidden error, when running Rspec (in Docker)
 Solutions
 - Option 1: Pass RAILS_ENV=test to Docker Compose (Recommended) Run the test command with the RAILS_ENV=test environment flag:
 docker compose run -e RAILS_ENV=test --rm web bundle exec rspec spec/requests/people_controller_request_spec.rb
@@ -23,10 +35,6 @@ This guarantees that Rails always boots in the test environment during RSpec run
 - Option 3: Whitelist www.example.com in config/environments/development.rb / test.rb If you want to permit the test host across all environments,
 add www.example.com to config.hosts:
 config.hosts << "www.example.com"
-
-
-# questions
-## is there a need for the Organization object (since only strings are used/compared)?
 
 
 # RSpec code coverage analysis

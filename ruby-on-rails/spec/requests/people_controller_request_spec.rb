@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe PeopleController, type: :request do
   before do
-    Organization.create!(name: 'Org 1', code: 'org1')
+    Organization.create!(name: 'Org One', code: 'org1')
   end
 
   describe 'GET /people/{:id}' do
@@ -58,21 +58,21 @@ RSpec.describe PeopleController, type: :request do
     end
 
     context 'person is NOT active' do
+      let!(:org_two) do
+        Organization.create!(name: 'Org Two', code: 'org2')
+      end
       let!(:inactive_person) do
         Person.create!(
           first_name: 'Janis',
           last_name: 'Joplin',
           phone_number: '305.555.0002',
           active: false,
-          permission_codes: ['org1']
+          permission_codes: ['org2']
         )
-      end
-      let!(:org_one) do
-        Organization.create!(name: 'Org One', code: 'org1')
       end
 
       it 'returns access denied' do
-        post "/people/#{inactive_person.id}/check_access", params: { organization: { id: org_one.id } }, as: :json
+        post "/people/#{inactive_person.id}/check_access", params: { organization: { id: org_two.id } }, as: :json
 
         expect(response).to have_http_status(:ok)
         json = JSON.parse(response.body)
@@ -82,17 +82,17 @@ RSpec.describe PeopleController, type: :request do
 
     context 'person IS active' do
       context 'WITHOUT access to organization' do
+        let!(:org_two) do
+          Organization.create!(name: 'Org Two', code: 'org2')
+        end
         let!(:active_person) do
           Person.create!(
             first_name: 'James',
             last_name: 'Buffett',
             phone_number: '305.555.0001',
             active: true,
-            permission_codes: ['org1']
+            permission_codes: []
           )
-        end
-        let!(:org_two) do
-          Organization.create!(name: 'Org Two', code: 'org2')
         end
 
         it 'returns access denied' do
@@ -105,21 +105,21 @@ RSpec.describe PeopleController, type: :request do
       end
 
       context 'WITH access to organization' do
+        let!(:org_two) do
+          Organization.create!(name: 'Org Two', code: 'org2')
+        end
         let!(:active_person) do
           Person.create!(
             first_name: 'James',
             last_name: 'Buffett',
             phone_number: '305.555.0001',
             active: true,
-            permission_codes: ['org1']
+            permission_codes: ['org2']
           )
-        end
-        let!(:org_one) do
-          Organization.create!(name: 'Org One', code: 'org1')
         end
 
         it 'returns access granted' do
-          post "/people/#{active_person.id}/check_access", params: { organization: { id: org_one.id } }, as: :json
+          post "/people/#{active_person.id}/check_access", params: { organization: { id: org_two.id } }, as: :json
 
           expect(response).to have_http_status(:ok)
           json = JSON.parse(response.body)
